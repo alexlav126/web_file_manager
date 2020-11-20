@@ -1,21 +1,15 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import MyComponent from '../components/MyComponent.vue'
 import FileManager from '../components/FileManager.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/mycomponent',
-    name: 'MyComponent',
-    component: MyComponent
-  },
-  {
-    path: '/test',
-    name: 'test',
+    path: '/file_manager',
+    name: 'file_manager',
     component: FileManager
-  }
+  },
 ]
 
 const router = new VueRouter({
