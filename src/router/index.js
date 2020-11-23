@@ -6,7 +6,7 @@ Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/file_manager',
+    path: '/',
     name: 'file_manager',
     component: FileManager
   },

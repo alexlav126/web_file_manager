@@ -10,6 +10,7 @@
         v-for="file in panel.file_array"
         v-bind:file="file"
         v-on:change_selected="on_change_selected"
+        v-on:folder-clicked="open_folder"
         v-bind:key="file.name"
     ></FileItem>
 </div>
@@ -17,6 +18,7 @@
 
 <script>
 import FileItem from './FileItem.vue'
+import { get_request_data_read_folder, send_post_request } from '../server_requests.js'
 
 export default {
     name: 'FilePanel',
@@ -38,16 +40,67 @@ export default {
     },
     */
     mounted: function() {
-        /*
-        this.files = [
-            { name: 'dir1', is_folder: true, href: 'link1', selected: true},
-            { name: 'file1', is_folder: false, href: 'link2', selected: false },
-        ]
-        */
-        // this.open_folder('/');
-        // this.path = "/path1";
+        this.open_folder('/');
     },
     methods: {
+        open_folder: function(path) {
+            let request_data = get_request_data_read_folder(path);
+            let response = send_post_request(request_data);
+            response.then((resp_value) => {
+                this.update_panel(resp_value);
+            });
+        },
+        
+        update_panel: function(response) {
+            if(response.status != 'ok') return;
+            let path = response.path;
+
+            // remove last '/'
+            let ind = path.lastIndexOf('/');
+            if((path.length > 1) && (path.length == ind + 1)) {
+                path = path.substring(0, ind);
+            }
+            this.panel.path = path;
+            
+            ind = path.lastIndexOf('/');
+            let path_back;
+            if(ind == 0) {
+                path_back = '/';
+            } else {
+                path_back = path.substring(0, ind);
+            }
+
+            let new_file_array = [];
+            new_file_array.push(this.create_item_obj('..', true, path_back));
+            if(path === '/') path = '';
+            
+            for(let folder in response.folders) {
+                const name = response.folders[folder];
+                const href = path + '/' + name;
+                const item = this.create_item_obj(name, true, href);
+                new_file_array.push(item);
+            }
+
+            const url = window.location.origin + window.location.pathname;
+            
+            for(let file in response.files) {
+                const name = response.files[file];
+                const href = url + '?file=' + name;
+                const item = this.create_item_obj(name, false, href);
+                new_file_array.push(item);
+            }
+            this.panel.file_array = new_file_array;
+        },
+
+        create_item_obj: function(name, is_folder, href) {
+            return {
+                is_folder: is_folder,
+                name: name,
+                href: href,
+                selected: false
+            }
+        },
+        
         select_all_files: function(selected) {
             for (let f in this.panel.file_array) {
                 this.panel.file_array[f].selected = selected;

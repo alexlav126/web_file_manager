@@ -31,6 +31,8 @@
 
 <script>
 import FilePanel from './FilePanel.vue'
+//import { get_request_data_read_folder, send_post_request } from '../server.js'
+
 export default {
     name: 'FileManager',
     components: {
@@ -65,6 +67,15 @@ export default {
             { name: 'dir22', is_folder: true, href: 'link22', selected: false},
             { name: 'file11', is_folder: false, href: 'link33', selected: false},
         ];
+
+        ////////////////////////////////////////////////////
+        //let path = '/';
+        //let request_data = get_request_data_read_folder(path);
+        //send_post_request(request_data);
+        //let response = this.send_post_request(request_data);
+        //response.then((resp_value) => {
+        //    this.update_panel(resp_value);
+        //});
     },
     methods: {
         activate_lhs_panel: function() {
@@ -85,9 +96,10 @@ export default {
                 this.$emit('folder-clicked', this.file.href);
             }
             */
-        }
+        },
     },
 };
+
 </script> 
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

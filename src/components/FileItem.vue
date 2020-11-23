@@ -40,11 +40,6 @@ export default {
             },
         }
     },
-    data: function() {
-        return {
-            is_selected: this.selected
-        }
-    },
     computed: {
         file_type: function() {
             return this.file.is_folder ? 'folder' : 'file';
@@ -52,14 +47,11 @@ export default {
     },
     methods: {
         click: function() {
-            console.log('FileItem->click() name: ' + this.file.name);
-            /*
             if(this.file.type === 'file') {
                 window.open(this.file.href, "_blank"); 
             } else {
                 this.$emit('folder-clicked', this.file.href);
             }
-            */
         }
     },
 };
