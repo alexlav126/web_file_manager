@@ -5,9 +5,9 @@
 >
     <button v-on:click="select_all_files(true)">Select all</button>
     <button v-on:click="select_all_files(false)">Unselect all</button>
-    <p>{{ panel.path }}</p>
+    <p>{{ path }}</p>
     <FileItem
-        v-for="file in panel.file_array"
+        v-for="file in file_array"
         v-bind:file="file"
         v-on:change_selected="on_change_selected"
         v-on:folder-clicked="open_folder"
@@ -28,29 +28,65 @@ export default {
     props: { // types: String, Number, Boolean, Array, Object, Function, Promise
         panel: {
             is_active: Boolean,
-            path: String,
-            file_array: Array,
+            is_lhs: Boolean,
         }
     },
-    /*
+    
     data: function() {
         return {
-            files: this.file_array
+            path: '/',
+            file_array: [],
         }
     },
-    */
+    
     mounted: function() {
-        this.open_folder('/');
+        this.read_this_folder();
+    },
+    watch: {
+        $route(/*to, from*/) {
+            this.read_this_folder();
+        }
     },
     methods: {
         open_folder: function(path) {
+            let lhs_path = this.$route.query.lhs;
+            let rhs_path = this.$route.query.rhs;
+            if (lhs_path === undefined) lhs_path = '/';
+            if (rhs_path === undefined) rhs_path = '/';
+            if(this.panel.is_lhs) {
+                lhs_path = path;
+            } else {
+                rhs_path = path;
+            }
+            const query = {
+                lhs: lhs_path,
+                rhs: rhs_path
+            };
+
+            let new_route = { name: 'file_manager', query: query }
+            if(this.$route.name === new_route.name) {
+                if ((this.$route.query.lhs === query.lhs) &&
+                    (this.$route.query.rhs === query.rhs)) {
+                    return;
+                }
+            }
+            this.$router.push(new_route).catch(()=>{});
+        },
+
+        read_this_folder: function() {
+            let path = '/';
+            if(this.panel.is_lhs) {
+                path = this.$route.query.lhs;
+            } else {
+                path = this.$route.query.rhs;
+            }
             let request_data = get_request_data_read_folder(path);
             let response = send_post_request(request_data);
             response.then((resp_value) => {
                 this.update_panel(resp_value);
             });
         },
-        
+
         update_panel: function(response) {
             if(response.status != 'ok') return;
             let path = response.path;
@@ -60,7 +96,7 @@ export default {
             if((path.length > 1) && (path.length == ind + 1)) {
                 path = path.substring(0, ind);
             }
-            this.panel.path = path;
+            this.path = path;
             
             ind = path.lastIndexOf('/');
             let path_back;
@@ -89,7 +125,7 @@ export default {
                 const item = this.create_item_obj(name, false, href);
                 new_file_array.push(item);
             }
-            this.panel.file_array = new_file_array;
+            this.file_array = new_file_array;
         },
 
         create_item_obj: function(name, is_folder, href) {
@@ -102,14 +138,14 @@ export default {
         },
         
         select_all_files: function(selected) {
-            for (let f in this.panel.file_array) {
-                this.panel.file_array[f].selected = selected;
+            for (let f in this.file_array) {
+                this.file_array[f].selected = selected;
             }
         },
         on_change_selected: function(name) {
             for(let f in this.panel.file_array) {
-                if(this.panel.file_array[f].name === name) {
-                    this.panel.file_array[f].selected = !this.panel.file_array[f].selected;
+                if(this.file_array[f].name === name) {
+                    this.file_array[f].selected = !this.file_array[f].selected;
                 }
             }
         },

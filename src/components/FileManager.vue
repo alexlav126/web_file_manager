@@ -31,51 +31,27 @@
 
 <script>
 import FilePanel from './FilePanel.vue'
-//import { get_request_data_read_folder, send_post_request } from '../server.js'
 
 export default {
     name: 'FileManager',
     components: {
         FilePanel
     },
-    data: function() { // types: String, Number, Boolean, Array, Object, Function, Promise
+    data: function() {
         return {
             panel_lhs: {
                 is_active: true,
-                path: null,
-                file_array: null,
+                is_lhs: true,
             },
             panel_rhs: {
                 is_active: false,
-                path: null,
-                file_array: null,
+                is_lhs: false,
             },
             new_folder_name: 'new folder',
         }
     },
     mounted: function() {
-        this.panel_lhs.path = 'path1';
-        this.panel_lhs.file_array = [
-            { name: 'dir1', is_folder: true, href: 'link1', selected: false},
-            { name: 'dir2', is_folder: true, href: 'link2', selected: false},
-            { name: 'file1', is_folder: false, href: 'link3', selected: false},
-        ];
-
-        this.panel_rhs.path = 'path2';
-        this.panel_rhs.file_array = [
-            { name: 'dir11', is_folder: true, href: 'link11', selected: false},
-            { name: 'dir22', is_folder: true, href: 'link22', selected: false},
-            { name: 'file11', is_folder: false, href: 'link33', selected: false},
-        ];
-
-        ////////////////////////////////////////////////////
-        //let path = '/';
-        //let request_data = get_request_data_read_folder(path);
-        //send_post_request(request_data);
-        //let response = this.send_post_request(request_data);
-        //response.then((resp_value) => {
-        //    this.update_panel(resp_value);
-        //});
+        //
     },
     methods: {
         activate_lhs_panel: function() {
@@ -89,13 +65,6 @@ export default {
         },
         button_click: function() {
             console.log('button_click()');
-            /*
-            if(this.file.type === 'file') {
-                window.open(this.file.href, "_blank"); 
-            } else {
-                this.$emit('folder-clicked', this.file.href);
-            }
-            */
         },
     },
 };
