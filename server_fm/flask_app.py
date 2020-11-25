@@ -1,0 +1,101 @@
+from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
+import os
+
+# different delimiters in jinja2 + flask
+class CustomFlask(Flask):
+    jinja_options = Flask.jinja_options.copy()
+    jinja_options.update(dict(
+        block_start_string='<%',
+        block_end_string='%>',
+        variable_start_string='%%',
+        variable_end_string='%%',
+        comment_start_string='<#',
+        comment_end_string='#>',
+    ))
+
+#app = Flask(__name__)
+app = CustomFlask(__name__)
+app.config['DEBUG'] = True
+
+CORS(app, resources={r'/*': {'origins': '*'}})
+
+ROOT_DIR = 'files_dir'
+
+def process_read_folder(path):
+    result = {}
+    result['status'] = 'ok'
+    result['path'] = path
+    result['folders'] = []
+    result['files'] = []
+    path = ROOT_DIR + '/' + path[1:]
+    for (dirpath, dirs, files) in os.walk(path):
+        result['files'].extend(files)
+        result['folders'].extend(dirs)
+        break
+    result['files'].sort()
+    result['folders'].sort()
+    return result
+
+def process_create_folder(path):
+    path = ROOT_DIR + '/' + path[1:]
+    result = {}
+    try:  
+        os.mkdir(path)
+        result['status'] = 'ok'
+    except OSError as error:  
+        result['status'] = 'error'
+    return result
+
+
+@app.route("/")
+def index():
+    #return render_template("index.html", **{"greeting": "Hello from Flask!"})
+    return '<a href=files>go to files</a>'
+
+@app.route("/a")
+def get_a():
+    return "this is a"
+
+@app.route('/files', methods=['GET', 'POST'])
+def files():
+    if request.method == 'POST':
+        #action = request.values.get('action')
+        req = request.get_json()
+        action = req['action']
+        if(action == 'read_folder'):
+            return jsonify(process_read_folder(req['path']))
+        elif(action == 'create_folder'):
+            return jsonify(process_create_folder(req['path']))
+        else:
+            status = 'ok'
+            response = { 'action': action, 'status': status }
+            print(req)
+            return jsonify(response)
+    else:
+        file_path = request.args.get('file')
+        if(not file_path):
+            return render_template("index.html", **{"greeting": "Hello from Flask!"})
+        else:
+            return 'this is file ' + file_path
+        
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        form = request.form['']
+        username = request.values.get('user') # Your form's
+        password = request.values.get('pass') # input names
+        #your_register_routine(username, password)
+        #return redirect(url_for('success',name = user))
+    else:
+        # You probably don't have args at this route with GET
+        # method, but if you do, you can access them like so:
+        yourarg = flask.request.args.get('argname')
+        #your_register_template_rendering(yourarg)
+
+@app.route('/<page>')
+def get_page(page):
+  if page=='b':
+     return 'this is b'
+  else:
+     return 'this is ' + page

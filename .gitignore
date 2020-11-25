@@ -21,3 +21,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+server_fm/__pycache__/*
+server_fm/files_dir/*
