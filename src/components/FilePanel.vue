@@ -74,12 +74,13 @@ export default {
         },
 
         read_this_folder: function() {
-            let path = '/';
+            let path;
             if(this.panel.is_lhs) {
                 path = this.$route.query.lhs;
             } else {
                 path = this.$route.query.rhs;
             }
+            if (path === undefined) path = '/';
             let request_data = get_request_data_read_folder(path);
             let response = send_post_request(request_data);
             response.then((resp_value) => {
