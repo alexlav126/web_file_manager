@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 
@@ -52,6 +52,23 @@ def process_create_folder(path):
 def index():
     return render_template("index.html")
 
+@app.route('/css/<path:filename>')
+def get_css(filename):
+    dir_css = 'templates/css'
+    try:
+        return send_from_directory(dir_css, filename, as_attachment=False)
+    except FileNotFoundError:
+        abort(404)
+
+@app.route('/js/<path:filename>')
+def get_js(filename):
+    dir_js = 'templates/js'
+    try:
+        return send_from_directory(dir_js, filename, as_attachment=False)
+    except FileNotFoundError:
+        abort(404)
+
+
 @app.route('/files', methods=['GET', 'POST'])
 def files():
     if request.method == 'POST':
@@ -71,5 +88,9 @@ def files():
         if(not file_path):
             return render_template("index.html")
         else:
-            return 'this is file ' + file_path
+            try:
+                return send_from_directory(ROOT_DIR, file_path, as_attachment=False)
+            except FileNotFoundError:
+                abort(404)
 
+    

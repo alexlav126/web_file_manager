@@ -24,3 +24,4 @@ pnpm-debug.log*
 
 server_fm/__pycache__/*
 server_fm/files_dir/*
+server_fm/templates/*
