@@ -50,17 +50,11 @@ def process_create_folder(path):
 
 @app.route("/")
 def index():
-    #return render_template("index.html", **{"greeting": "Hello from Flask!"})
-    return '<a href=files>go to files</a>'
-
-@app.route("/a")
-def get_a():
-    return "this is a"
+    return render_template("index.html")
 
 @app.route('/files', methods=['GET', 'POST'])
 def files():
     if request.method == 'POST':
-        #action = request.values.get('action')
         req = request.get_json()
         action = req['action']
         if(action == 'read_folder'):
@@ -75,27 +69,7 @@ def files():
     else:
         file_path = request.args.get('file')
         if(not file_path):
-            return render_template("index.html", **{"greeting": "Hello from Flask!"})
+            return render_template("index.html")
         else:
             return 'this is file ' + file_path
-        
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        form = request.form['']
-        username = request.values.get('user') # Your form's
-        password = request.values.get('pass') # input names
-        #your_register_routine(username, password)
-        #return redirect(url_for('success',name = user))
-    else:
-        # You probably don't have args at this route with GET
-        # method, but if you do, you can access them like so:
-        yourarg = flask.request.args.get('argname')
-        #your_register_template_rendering(yourarg)
 
-@app.route('/<page>')
-def get_page(page):
-  if page=='b':
-     return 'this is b'
-  else:
-     return 'this is ' + page
