@@ -123,7 +123,7 @@ export default {
             
             for(let file in response.files) {
                 const name = response.files[file];
-                const href = url + '?file=' + name;
+                const href = url + '?file=' + path + '/' + name;
                 const item = this.create_item_obj(name, false, href);
                 new_file_array.push(item);
             }

@@ -88,8 +88,12 @@ def files():
         if(not file_path):
             return render_template("index.html")
         else:
+            if file_path[0] == '/':
+                file_path = file_path[1:]
+            full_path = os.path.join(ROOT_DIR, file_path)
+            (file_dir, file_path) = os.path.split(full_path)
             try:
-                return send_from_directory(ROOT_DIR, file_path, as_attachment=False)
+                return send_from_directory(file_dir, file_path, as_attachment=False)
             except FileNotFoundError:
                 abort(404)
 
