@@ -1,3 +1,5 @@
+import { url_files } from './url.js'
+
 function get_request_data_read_folder(path) {
     return {
         'action': 'read_folder',
@@ -7,7 +9,7 @@ function get_request_data_read_folder(path) {
 
 async function send_post_request(data = {}) {
     // const url = window.location.origin + window.location.pathname;
-    const url = 'http://localhost:5000/files';
+    const url = url_files;
     console.log('send_post_request() data:', data);
     try {
         const response = await fetch(url, {

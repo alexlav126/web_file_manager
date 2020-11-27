@@ -4,12 +4,20 @@
         type="checkbox"
         v-bind:checked="file.selected"
         v-on:change="$emit('change_selected', file.name)">
+        
     <span
         class="file-item-class"
         v-on:click="click"
     >
-        [{{ file_type }}]
-        {{ file.name }}
+        <a v-if="!file.is_folder" v-bind:href="file.href" target="_blank">
+            [{{ file_type }}]
+            {{ file.name }}
+        </a>
+        <span v-else>
+            [{{ file_type }}]
+            {{ file.name }}
+        </span>
+        
     </span>
 </div>
 </template>
@@ -47,9 +55,7 @@ export default {
     },
     methods: {
         click: function() {
-            if(this.file.type === 'file') {
-                window.open(this.file.href, "_blank"); 
-            } else {
+            if(this.file.is_folder) {
                 this.$emit('folder-clicked', this.file.href);
             }
         }

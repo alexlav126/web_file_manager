@@ -18,6 +18,7 @@
 
 <script>
 import FileItem from './FileItem.vue'
+import { url_files } from '../url.js'
 import { get_request_data_read_folder, send_post_request } from '../server_requests.js'
 
 export default {
@@ -118,7 +119,7 @@ export default {
                 new_file_array.push(item);
             }
 
-            const url = window.location.origin + window.location.pathname;
+            const url = url_files;
             
             for(let file in response.files) {
                 const name = response.files[file];
