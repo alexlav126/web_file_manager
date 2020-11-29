@@ -65,6 +65,8 @@ export default {
         },
         button_click: function() {
             console.log('button_click()');
+            this.$store.commit('increment');
+            console.log(this.$store.state.count);
         },
     },
 };
