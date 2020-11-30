@@ -74,12 +74,30 @@ def process_copy_files(files, dst_path):
             src = os.path.join(ROOT_DIR, f[1:])
             (_, name) = os.path.split(src)
             dst = os.path.join(ROOT_DIR, dst_path[1:], name)
-            print('src: ', src)
-            print('dst: ', dst)
+            #print('src: ', src)
+            #print('dst: ', dst)
             if(os.path.isfile(src)):
                 shutil.copy(src, dst)
             if(os.path.isdir(src)):
                 shutil.copytree(src, dst)
+        except Exception as err:
+            print(err)
+            result['status'] = 'error'
+            break
+    return result
+
+def process_move_files(files, dst_path):
+    print('move files: ' + str(files) + ' to dst: ' + str(dst_path))
+    result = {}
+    result['status'] = 'ok'
+    for f in files:
+        try:
+            src = os.path.join(ROOT_DIR, f[1:])
+            (_, name) = os.path.split(src)
+            dst = os.path.join(ROOT_DIR, dst_path[1:], name)
+            print('src: ', src)
+            print('dst: ', dst)
+            shutil.move(src, dst)
         except Exception as err:
             print(err)
             result['status'] = 'error'
@@ -120,7 +138,8 @@ def files():
             return jsonify(process_remove_files(req['files']))
         elif(action == 'copy_files'):
             return jsonify(process_copy_files(req['files'], req['dst_path']))
-            
+        elif(action == 'move_files'):
+            return jsonify(process_move_files(req['files'], req['dst_path']))
         else:
             status = 'error'
             response = { 'action': action, 'status': status }

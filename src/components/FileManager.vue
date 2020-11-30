@@ -13,7 +13,7 @@
     
     <div class="commands">
         <button v-on:click="copy_files">copy</button>
-        <button v-on:click="button_click">move</button>
+        <button v-on:click="move_files">move</button>
         <button v-on:click="remove_files">remove</button>
         <br>
         <input type="text" v-model="new_folder_name">
@@ -123,6 +123,28 @@ export default {
                 this.$store.dispatch('read_folder', {
                     is_lhs: is_lhs,
                     path: dst_path
+                });
+            })
+        },
+
+        move_files: function() {
+            const files = this.get_selected_file_names();
+            const dst_path =
+                this.$store.state.is_active_panel_lhs ?
+                this.$store.state.panel_rhs.path :
+                this.$store.state.panel_lhs.path;
+            let p = this.$store.dispatch('move_files', {
+                files: files,
+                dst_path: dst_path
+            });
+            p.then(() => {
+                this.$store.dispatch('read_folder', {
+                    is_lhs: true,
+                    path: this.$store.state.panel_lhs.path
+                });
+                this.$store.dispatch('read_folder', {
+                    is_lhs: false,
+                    path: this.$store.state.panel_rhs.path
                 });
             })
         },

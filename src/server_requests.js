@@ -29,6 +29,14 @@ function get_request_data_copy_files(files, dst_path) {
     }
 }
 
+function get_request_data_move_files(files, dst_path) {
+    return {
+        'action': 'move_files',
+        'files': files,
+        'dst_path': dst_path
+    }
+}
+
 
 async function send_post_request(data = {}) {
     // const url = window.location.origin + window.location.pathname;
@@ -56,5 +64,6 @@ export {
     get_request_data_create_folder,
     get_request_data_remove_files,
     get_request_data_copy_files,
+    get_request_data_move_files,
     send_post_request
 }
