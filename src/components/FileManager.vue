@@ -17,10 +17,13 @@
         <button v-on:click="button_click">remove</button>
         <br>
         <input type="text" v-model="new_folder_name">
-        <button v-on:click="button_click">new folder</button>
+        <button v-on:click="create_folder">new folder</button>
         <br>
         <button v-on:click="button_click">upload</button>
         <button v-on:click="button_click">download</button>
+    </div>
+    <div class="status-string">
+        {{ status_str }}
     </div>
 </div>
 </template>
@@ -41,11 +44,13 @@ export default {
         panel_rhs: function() {
             return this.$store.state.is_active_panel_rhs;
         },
+        status_str: function() {
+            return this.$store.state.status_string;
+        },
     },
     
     data: function() {
         return {
-            
             new_folder_name: 'new folder',
         }
     },
@@ -54,15 +59,29 @@ export default {
         //
     },
     methods: {
-        activate_lhs_panel: function() {
-            this.panel_lhs.is_active = true;
-            this.panel_rhs.is_active = false;
+        create_folder: function() {
+            let path;
+            if(this.$store.state.is_active_panel_lhs) {
+                path = this.$store.state.panel_lhs.path;
+            } else {
+                path = this.$store.state.panel_rhs.path;
+            }
+            if(path != '/') path += '/';
+            path += this.new_folder_name;
+            let p = this.$store.dispatch('create_folder', { path: path });
+            p.then(() => {
+                const is_lhs = this.$store.state.is_active_panel_lhs;
+                const path =
+                    is_lhs ?
+                    this.$store.state.panel_lhs.path :
+                    this.$store.state.panel_rhs.path;
+                this.$store.dispatch('read_folder', {
+                    is_lhs: is_lhs,
+                    path: path
+                });
+            })
         },
-
-        activate_rhs_panel: function() {
-            this.panel_lhs.is_active = false;
-            this.panel_rhs.is_active = true;
-        },
+        
         button_click: function() {
             console.log('button_click()');
         },
@@ -81,5 +100,8 @@ export default {
     display: table-cell;
     border: 1px solid black;
     width: 50%
+}
+.status-string {
+    background-color: gray;
 }
 </style>

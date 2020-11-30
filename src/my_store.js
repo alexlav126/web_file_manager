@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import { url_files } from './url.js'
 import {
     get_request_data_read_folder,
+    get_request_data_create_folder,
     send_post_request
 } from './server_requests.js'
 
@@ -22,6 +23,7 @@ function create_file_obj(name, is_folder, href) {
 const my_store = new Vuex.Store({
     state: {
         is_active_panel_lhs: true,
+        status_string: 'ready',
         panel_lhs: {
             is_lhs: true,
             path: null,
@@ -63,6 +65,10 @@ const my_store = new Vuex.Store({
                     panel.files[f].selected = !panel.files[f].selected;
                 }
             }
+        },
+
+        update_status_string: function(state, new_status) {
+            state.status_string = new_status;
         },
         
         update_panel(state, {is_lhs, response}) {
@@ -120,7 +126,23 @@ const my_store = new Vuex.Store({
                     response: resp_value
                 });
             });
-        }
+        },
+
+        create_folder(context, {path}) {
+            if(path === undefined) return;
+            let request_data = get_request_data_create_folder(path);
+            let response = send_post_request(request_data);
+            return response.then((resp_value) => {
+                if(resp_value.status != 'ok') {
+                    throw 'error: can\'t create folder: ' + path;
+                } else {
+                    const s = 'created folder: ' + path;
+                    context.commit('update_status_string', s);
+                }
+            }).catch((err) => {
+                context.commit('update_status_string', err);
+            });
+        },
     },
 })
 

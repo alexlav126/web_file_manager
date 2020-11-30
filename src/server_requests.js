@@ -7,6 +7,13 @@ function get_request_data_read_folder(path) {
     }
 }
 
+function get_request_data_create_folder(path) {
+    return {
+        'action': 'create_folder',
+        'path': path
+    }
+}
+
 async function send_post_request(data = {}) {
     // const url = window.location.origin + window.location.pathname;
     const url = url_files;
@@ -28,4 +35,8 @@ async function send_post_request(data = {}) {
     }
 }
 
-export { get_request_data_read_folder, send_post_request }
+export {
+    get_request_data_read_folder,
+    get_request_data_create_folder,
+    send_post_request
+}
