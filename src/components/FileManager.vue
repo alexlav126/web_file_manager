@@ -12,7 +12,7 @@
     </div>
     
     <div class="commands">
-        <button v-on:click="button_click">copy</button>
+        <button v-on:click="copy_files">copy</button>
         <button v-on:click="button_click">move</button>
         <button v-on:click="remove_files">remove</button>
         <br>
@@ -94,7 +94,6 @@ export default {
         
         remove_files: function() {
             const files = this.get_selected_file_names();
-            console.log(files);
             let p = this.$store.dispatch('remove_files', { files: files });
             p.then(() => {
                 const is_lhs = this.$store.state.is_active_panel_lhs;
@@ -105,6 +104,25 @@ export default {
                 this.$store.dispatch('read_folder', {
                     is_lhs: is_lhs,
                     path: path
+                });
+            })
+        },
+
+        copy_files: function() {
+            const files = this.get_selected_file_names();
+            const dst_path =
+                this.$store.state.is_active_panel_lhs ?
+                this.$store.state.panel_rhs.path :
+                this.$store.state.panel_lhs.path;
+            let p = this.$store.dispatch('copy_files', {
+                files: files,
+                dst_path: dst_path
+            });
+            p.then(() => {
+                const is_lhs = !this.$store.state.is_active_panel_lhs;
+                this.$store.dispatch('read_folder', {
+                    is_lhs: is_lhs,
+                    path: dst_path
                 });
             })
         },

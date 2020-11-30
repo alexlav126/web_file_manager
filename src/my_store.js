@@ -5,6 +5,7 @@ import {
     get_request_data_read_folder,
     get_request_data_create_folder,
     get_request_data_remove_files,
+    get_request_data_copy_files,
     send_post_request
 } from './server_requests.js'
 
@@ -175,7 +176,13 @@ const my_store = new Vuex.Store({
             let request_data = get_request_data_remove_files(files);
             let response = send_post_request(request_data);
             return response;
-        }
+        },
+
+        copy_files(context, {files, dst_path}) {
+            let request_data = get_request_data_copy_files(files, dst_path);
+            let response = send_post_request(request_data);
+            return response;
+        },
     },
 })
 
