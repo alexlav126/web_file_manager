@@ -3,15 +3,11 @@
     <div class="file-panel-table">
         <div class="panel">
             <h1>Left</h1>
-            <FilePanel
-                v-on:activated="activate_lhs_panel"
-                v-bind:panel="panel_lhs"/>
+            <FilePanel v-bind:is_lhs="true"/>
         </div>
         <div class="panel">
             <h1>Right</h1>
-            <FilePanel
-                v-on:activated="activate_rhs_panel"
-                v-bind:panel="panel_rhs"/>
+            <FilePanel v-bind:is_lhs="false"/>
         </div>
     </div>
     
@@ -37,19 +33,23 @@ export default {
     components: {
         FilePanel
     },
+
+    computed: {
+        panel_lhs: function() {
+            return this.$store.state.is_active_panel_lhs;
+        },
+        panel_rhs: function() {
+            return this.$store.state.is_active_panel_rhs;
+        },
+    },
+    
     data: function() {
         return {
-            panel_lhs: {
-                is_active: true,
-                is_lhs: true,
-            },
-            panel_rhs: {
-                is_active: false,
-                is_lhs: false,
-            },
+            
             new_folder_name: 'new folder',
         }
     },
+    
     mounted: function() {
         //
     },
@@ -65,8 +65,6 @@ export default {
         },
         button_click: function() {
             console.log('button_click()');
-            this.$store.commit('increment');
-            console.log(this.$store.state.count);
         },
     },
 };

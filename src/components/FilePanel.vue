@@ -1,13 +1,13 @@
 <template>
 <div
-    v-on:click="$emit('activated')"
-    v-bind:class="{ 'active-file-panel': panel.is_active }"
+    v-on:click="activate"
+    v-bind:class="{ 'active-file-panel': is_active }"
 >
     <button v-on:click="select_all_files(true)">Select all</button>
     <button v-on:click="select_all_files(false)">Unselect all</button>
     <p>{{ path }}</p>
     <FileItem
-        v-for="file in file_array"
+        v-for="file in files"
         v-bind:file="file"
         v-on:change_selected="on_change_selected"
         v-on:folder-clicked="open_folder"
@@ -18,8 +18,6 @@
 
 <script>
 import FileItem from './FileItem.vue'
-import { url_files } from '../url.js'
-import { get_request_data_read_folder, send_post_request } from '../server_requests.js'
 
 export default {
     name: 'FilePanel',
@@ -27,17 +25,33 @@ export default {
         FileItem
     },
     props: { // types: String, Number, Boolean, Array, Object, Function, Promise
-        panel: {
-            is_active: Boolean,
-            is_lhs: Boolean,
-        }
+        is_lhs: Boolean,
     },
-    
-    data: function() {
-        return {
-            path: '/',
-            file_array: [],
-        }
+
+    computed: {
+        is_active: function() {
+            if(this.is_lhs) {
+                return this.$store.state.is_active_panel_lhs;
+            } else {
+                return !this.$store.state.is_active_panel_lhs;
+            }
+        },
+
+        path: function() {
+            if(this.is_lhs) {
+                return this.$store.state.panel_lhs.path;
+            } else {
+                return this.$store.state.panel_rhs.path;
+            }
+        },
+
+        files: function() {
+            if(this.is_lhs) {
+                return this.$store.state.panel_lhs.files;
+            } else {
+                return this.$store.state.panel_rhs.files;
+            }
+        },
     },
     
     mounted: function() {
@@ -49,12 +63,16 @@ export default {
         }
     },
     methods: {
+        activate: function() {
+            this.$store.commit('activate_panel', {is_lhs: this.is_lhs});
+        },
+       
         open_folder: function(path) {
             let lhs_path = this.$route.query.lhs;
             let rhs_path = this.$route.query.rhs;
             if (lhs_path === undefined) lhs_path = '/';
             if (rhs_path === undefined) rhs_path = '/';
-            if(this.panel.is_lhs) {
+            if(this.is_lhs) {
                 lhs_path = path;
             } else {
                 rhs_path = path;
@@ -76,80 +94,31 @@ export default {
 
         read_this_folder: function() {
             let path;
-            if(this.panel.is_lhs) {
+            if(this.is_lhs) {
                 path = this.$route.query.lhs;
             } else {
                 path = this.$route.query.rhs;
             }
             if (path === undefined) path = '/';
-            let request_data = get_request_data_read_folder(path);
-            let response = send_post_request(request_data);
-            response.then((resp_value) => {
-                this.update_panel(resp_value);
+
+            this.$store.dispatch('read_folder', {
+                is_lhs: this.is_lhs,
+                path: path
             });
         },
 
-        update_panel: function(response) {
-            if(response.status != 'ok') return;
-            let path = response.path;
-
-            // remove last '/'
-            let ind = path.lastIndexOf('/');
-            if((path.length > 1) && (path.length == ind + 1)) {
-                path = path.substring(0, ind);
-            }
-            this.path = path;
-            
-            ind = path.lastIndexOf('/');
-            let path_back;
-            if(ind == 0) {
-                path_back = '/';
-            } else {
-                path_back = path.substring(0, ind);
-            }
-
-            let new_file_array = [];
-            new_file_array.push(this.create_item_obj('..', true, path_back));
-            if(path === '/') path = '';
-            
-            for(let folder in response.folders) {
-                const name = response.folders[folder];
-                const href = path + '/' + name;
-                const item = this.create_item_obj(name, true, href);
-                new_file_array.push(item);
-            }
-
-            const url = url_files;
-            
-            for(let file in response.files) {
-                const name = response.files[file];
-                const href = url + '?file=' + path + '/' + name;
-                const item = this.create_item_obj(name, false, href);
-                new_file_array.push(item);
-            }
-            this.file_array = new_file_array;
-        },
-
-        create_item_obj: function(name, is_folder, href) {
-            return {
-                is_folder: is_folder,
-                name: name,
-                href: href,
-                selected: false
-            }
+        select_all_files: function(selected) {
+            this.$store.commit('select_all_files_in_panel', {
+                is_lhs: this.is_lhs,
+                selected: selected
+            });
         },
         
-        select_all_files: function(selected) {
-            for (let f in this.file_array) {
-                this.file_array[f].selected = selected;
-            }
-        },
         on_change_selected: function(name) {
-            for(let f in this.panel.file_array) {
-                if(this.file_array[f].name === name) {
-                    this.file_array[f].selected = !this.file_array[f].selected;
-                }
-            }
+            this.$store.commit('toogle_file_selected', {
+                is_lhs: this.is_lhs,
+                name: name
+            });
         },
     },
 };
