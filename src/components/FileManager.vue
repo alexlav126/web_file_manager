@@ -14,7 +14,7 @@
     <div class="commands">
         <button v-on:click="button_click">copy</button>
         <button v-on:click="button_click">move</button>
-        <button v-on:click="button_click">remove</button>
+        <button v-on:click="remove_files">remove</button>
         <br>
         <input type="text" v-model="new_folder_name">
         <button v-on:click="create_folder">new folder</button>
@@ -59,6 +59,16 @@ export default {
         //
     },
     methods: {
+        get_selected_file_names: function() {
+            let files;
+            if(this.$store.state.is_active_panel_lhs) {
+                files = this.$store.getters.lhs_selected_file_names;
+            } else {
+                files = this.$store.getters.rhs_selected_file_names;
+            }
+            return files;
+        },
+        
         create_folder: function() {
             let path;
             if(this.$store.state.is_active_panel_lhs) {
@@ -69,6 +79,23 @@ export default {
             if(path != '/') path += '/';
             path += this.new_folder_name;
             let p = this.$store.dispatch('create_folder', { path: path });
+            p.then(() => {
+                const is_lhs = this.$store.state.is_active_panel_lhs;
+                const path =
+                    is_lhs ?
+                    this.$store.state.panel_lhs.path :
+                    this.$store.state.panel_rhs.path;
+                this.$store.dispatch('read_folder', {
+                    is_lhs: is_lhs,
+                    path: path
+                });
+            })
+        },
+        
+        remove_files: function() {
+            const files = this.get_selected_file_names();
+            console.log(files);
+            let p = this.$store.dispatch('remove_files', { files: files });
             p.then(() => {
                 const is_lhs = this.$store.state.is_active_panel_lhs;
                 const path =

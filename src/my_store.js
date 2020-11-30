@@ -4,6 +4,7 @@ import { url_files } from './url.js'
 import {
     get_request_data_read_folder,
     get_request_data_create_folder,
+    get_request_data_remove_files,
     send_post_request
 } from './server_requests.js'
 
@@ -43,6 +44,32 @@ const my_store = new Vuex.Store({
                 href: '/',
                 selected: false
             }]
+        },
+    },
+
+    getters: {
+        lhs_selected_file_names: state => {
+            let files = state.panel_lhs.files.filter(f => f.selected);
+            let path = state.panel_lhs.path;
+            if(path === '/') path = '';
+            let names = [];
+            for(let f in files) {
+                if(files[f].name === '..') continue;
+                names.push(path + '/' + files[f].name);
+            }
+            return names;
+        },
+
+        rhs_selected_file_names: state => {
+            let files = state.panel_rhs.files.filter(f => f.selected);
+            let path = state.panel_rhs.path;
+            if(path === '/') path = '';
+            let names = [];
+            for(let f in files) {
+                if(files[f].name === '..') continue;
+                names.push(path + '/' + files[f].name);
+            }
+            return names;
         },
     },
     
@@ -143,6 +170,12 @@ const my_store = new Vuex.Store({
                 context.commit('update_status_string', err);
             });
         },
+
+        remove_files(context, {files}) {
+            let request_data = get_request_data_remove_files(files);
+            let response = send_post_request(request_data);
+            return response;
+        }
     },
 })
 

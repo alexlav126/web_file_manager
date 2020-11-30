@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
+import shutil
 
 # different delimiters in jinja2 + flask
 class CustomFlask(Flask):
@@ -47,6 +48,23 @@ def process_create_folder(path):
         result['status'] = 'error'
     return result
 
+def process_remove_files(files):
+    print('remove files: ', files)
+    result = {}
+    result['status'] = 'ok'
+    for f in files:
+        try:
+            path = ROOT_DIR + '/' + f[1:]
+            if(os.path.isfile(path)):
+                os.remove(path)
+            if(os.path.isdir(path)):
+                shutil.rmtree(path)
+        except Exception as err:
+            print(err)
+            result['status'] = 'error'
+            break
+    return result
+
 
 @app.route("/")
 def index():
@@ -78,8 +96,10 @@ def files():
             return jsonify(process_read_folder(req['path']))
         elif(action == 'create_folder'):
             return jsonify(process_create_folder(req['path']))
+        elif(action == 'remove_files'):
+            return jsonify(process_remove_files(req['files']))
         else:
-            status = 'ok'
+            status = 'error'
             response = { 'action': action, 'status': status }
             print(req)
             return jsonify(response)

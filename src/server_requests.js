@@ -14,6 +14,14 @@ function get_request_data_create_folder(path) {
     }
 }
 
+
+function get_request_data_remove_files(files) {
+    return {
+        'action': 'remove_files',
+        'files': files
+    }
+}
+
 async function send_post_request(data = {}) {
     // const url = window.location.origin + window.location.pathname;
     const url = url_files;
@@ -38,5 +46,6 @@ async function send_post_request(data = {}) {
 export {
     get_request_data_read_folder,
     get_request_data_create_folder,
+    get_request_data_remove_files,
     send_post_request
 }
