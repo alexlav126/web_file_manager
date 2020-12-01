@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import axios from 'axios'
 import { url_files } from './url.js'
 import {
     get_request_data_read_folder,
@@ -191,7 +192,18 @@ const my_store = new Vuex.Store({
             return response;
         },
 
-        
+        upload_file(context, {file, path, this_arg}) {
+            let formData = new FormData();
+            formData.append('file', file);
+            formData.append('path', path);
+            const config = {
+                headers: {'Content-Type': 'multipart/form-data'},
+                onUploadProgress: function(e) {
+                    this_arg.upload_percentage = Math.round((e.loaded * 100) / e.total);
+                }.bind(this_arg)
+            };
+            return axios.post(url_files, formData, config);
+        },
     },
 })
 

@@ -15,12 +15,16 @@
         <button v-on:click="copy_files">copy</button>
         <button v-on:click="move_files">move</button>
         <button v-on:click="remove_files">remove</button>
-        <br>
+        <br><br>
         <input type="text" v-model="new_folder_name">
         <button v-on:click="create_folder">new folder</button>
+        <br><br>
+        <label>File
+            <input type="file" id="file" ref="file" v-on:change="upload_file_changed"/>
+            <button v-on:click="upload_file_action">upload</button>
+        </label>
         <br>
-        <button v-on:click="button_click">upload</button>
-        <button v-on:click="button_click">download</button>
+        <progress max="100" :value.prop="upload_percentage"></progress>
     </div>
     <div class="status-string">
         {{ status_str }}
@@ -52,12 +56,15 @@ export default {
     data: function() {
         return {
             new_folder_name: 'new folder',
+            upload_file: '',
+            upload_percentage: 0,
         }
     },
     
     mounted: function() {
         //
     },
+
     methods: {
         get_selected_file_names: function() {
             let files;
@@ -147,6 +154,39 @@ export default {
                     path: this.$store.state.panel_rhs.path
                 });
             })
+        },
+
+        upload_file_changed: function() {
+            this.upload_file = this.$refs.file.files[0];
+        },
+
+        upload_file_action: function() {
+            const path =
+                this.$store.state.is_active_panel_lhs ?
+                this.$store.state.panel_lhs.path :
+                this.$store.state.panel_rhs.path;
+            this.$store.dispatch('upload_file', {
+                file: this.upload_file,
+                path: path,
+                this_arg: this
+            }).then(() => {
+                console.log('upload_file_action SUCCESS!!');
+                this.upload_percentage = 0;
+                const is_lhs = this.$store.state.is_active_panel_lhs;
+                const path =
+                    is_lhs ?
+                    this.$store.state.panel_lhs.path :
+                    this.$store.state.panel_rhs.path;
+                this.$store.dispatch('read_folder', {
+                    is_lhs: is_lhs,
+                    path: path
+                });
+            })
+            .catch(() => {
+                console.log('upload_file_action FAILURE!!');
+            });
+            
+            
         },
         
         button_click: function() {

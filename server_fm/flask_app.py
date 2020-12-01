@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, abort
 from flask_cors import CORS
+from werkzeug import secure_filename
 import os
 import shutil
 
@@ -104,6 +105,17 @@ def process_move_files(files, dst_path):
             break
     return result
 
+def process_upload_file(file_storage, path):
+    print('name1: ', file_storage.filename)
+    name = secure_filename(file_storage.filename)
+    print('name2: ', name)
+    file_name = os.path.join(ROOT_DIR, path[1:], name)
+    print('process_upload_file name: ' + file_name)
+    result = {}
+    result['status'] = 'ok'
+    file_storage.save(file_name)
+    return result
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -128,23 +140,31 @@ def get_js(filename):
 @app.route('/files', methods=['GET', 'POST'])
 def files():
     if request.method == 'POST':
-        req = request.get_json()
-        action = req['action']
-        if(action == 'read_folder'):
-            return jsonify(process_read_folder(req['path']))
-        elif(action == 'create_folder'):
-            return jsonify(process_create_folder(req['path']))
-        elif(action == 'remove_files'):
-            return jsonify(process_remove_files(req['files']))
-        elif(action == 'copy_files'):
-            return jsonify(process_copy_files(req['files'], req['dst_path']))
-        elif(action == 'move_files'):
-            return jsonify(process_move_files(req['files'], req['dst_path']))
+        if ('application/json' in request.content_type):
+            req = request.get_json()
+            action = req['action']
+            if(action == 'read_folder'):
+                return jsonify(process_read_folder(req['path']))
+            elif(action == 'create_folder'):
+                return jsonify(process_create_folder(req['path']))
+            elif(action == 'remove_files'):
+                return jsonify(process_remove_files(req['files']))
+            elif(action == 'copy_files'):
+                return jsonify(process_copy_files(req['files'], req['dst_path']))
+            elif(action == 'move_files'):
+                return jsonify(process_move_files(req['files'], req['dst_path']))
+            else:
+                status = 'error'
+                response = { 'action': action, 'status': status }
+                print(req)
+                return jsonify(response)
+        elif ('multipart/form-data' in request.content_type):
+            file_storage = request.files['file']
+            file_path = request.form['path']
+            return jsonify(process_upload_file(file_storage, file_path))
         else:
-            status = 'error'
-            response = { 'action': action, 'status': status }
-            print(req)
-            return jsonify(response)
+            print('content_type: ', request.content_type)
+            abort(404)
     else:
         file_path = request.args.get('file')
         if(not file_path):
