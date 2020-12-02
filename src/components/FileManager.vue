@@ -18,16 +18,39 @@
     </div>
     
     <div class="commands">
-        <button v-on:click="copy_files">copy</button>
-        <button v-on:click="move_files">move</button>
-        <button v-on:click="remove_files">remove</button>
+        <button
+            v-on:click="copy_files"
+            v-bind:disabled="is_no_selected_files"
+        >
+            Copy
+        </button>
+        <button
+            v-on:click="move_files"
+            v-bind:disabled="is_no_selected_files"
+        >
+            Move
+        </button>
+        <button
+            v-on:click="remove_files"
+            v-bind:disabled="is_no_selected_files"
+        >
+            Remove
+        </button>
+        
         <br><br>
+        
         <input type="text" v-model="new_folder_name">
-        <button v-on:click="create_folder">new folder</button>
+        <button v-on:click="create_folder">New folder</button>
         <br><br>
-        <label>File
+        <label>
+            File
             <input type="file" id="file" ref="file" v-on:change="upload_file_changed"/>
-            <button v-on:click="upload_file_action">upload</button>
+            <button
+                v-on:click="upload_file_action"
+                v-bind:disabled="is_no_selected_upload_file"
+            >
+                Upload
+            </button>
         </label>
         <br>
         <progress max="100" :value.prop="upload_percentage"></progress>
@@ -51,9 +74,19 @@ export default {
         is_active_panel_lhs: function() {
             return this.$store.state.is_active_panel_lhs;
         },
+        
         is_active_panel_rhs: function() {
             return !this.$store.state.is_active_panel_lhs;
         },
+        
+        is_no_selected_files: function() {
+            return this.$store.getters.selected_file_names.length == 0;
+        },
+
+        is_no_selected_upload_file: function() {
+            return this.upload_file === '';
+        },
+        
         status_str: function() {
             return this.$store.state.status_string;
         },
