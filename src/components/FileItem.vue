@@ -6,7 +6,8 @@
         v-on:change="$emit('change_selected', file.name)">
         
     <span
-        class="file-item-class"
+        class="file-item"
+        v-bind:class="{ 'file-item-selected': file.selected }"
         v-on:click="click"
     >
         <a v-if="!file.is_folder" v-bind:href="file.href" target="_blank">
@@ -65,7 +66,10 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.file-item-class:hover {
+.file-item:hover {
     background-color: yellow;
+}
+.file-item-selected {
+    background-color: #FF6347;
 }
 </style>

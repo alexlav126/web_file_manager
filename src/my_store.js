@@ -51,21 +51,29 @@ const my_store = new Vuex.Store({
     },
 
     getters: {
-        lhs_selected_file_names: state => {
-            let files = state.panel_lhs.files.filter(f => f.selected);
-            let path = state.panel_lhs.path;
-            if(path === '/') path = '';
-            let names = [];
-            for(let f in files) {
-                if(files[f].name === '..') continue;
-                names.push(path + '/' + files[f].name);
+        active_panel: state => {
+            if(state.is_active_panel_lhs) {
+                return state.panel_lhs;
+            } else {
+                return state.panel_rhs;
             }
-            return names;
         },
 
-        rhs_selected_file_names: state => {
-            let files = state.panel_rhs.files.filter(f => f.selected);
-            let path = state.panel_rhs.path;
+        not_active_panel: state => {
+            if(state.is_active_panel_lhs) {
+                return state.panel_rhs;
+            } else {
+                return state.panel_lhs;
+            }
+        },
+        
+        selected_file_names: state => {
+            const active_panel =
+                state.is_active_panel_lhs ?
+                state.panel_lhs :
+                state.panel_rhs;
+            const files = active_panel.files.filter(f => f.selected);
+            let path = active_panel.path;
             if(path === '/') path = '';
             let names = [];
             for(let f in files) {

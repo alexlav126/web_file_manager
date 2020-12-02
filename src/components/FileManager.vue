@@ -1,12 +1,18 @@
 <template>
 <div>
     <div class="file-panel-table">
-        <div class="panel">
-            <h1>Left</h1>
+        <div
+            class="panel"
+            v-bind:class="{ 'active-panel': is_active_panel_lhs }"
+            v-on:click="activate_panel(true)"
+        >
             <FilePanel v-bind:is_lhs="true"/>
         </div>
-        <div class="panel">
-            <h1>Right</h1>
+        <div
+            class="panel"
+            v-bind:class="{ 'active-panel': is_active_panel_rhs }"
+            v-on:click="activate_panel(false)"
+        >
             <FilePanel v-bind:is_lhs="false"/>
         </div>
     </div>
@@ -42,11 +48,11 @@ export default {
     },
 
     computed: {
-        panel_lhs: function() {
+        is_active_panel_lhs: function() {
             return this.$store.state.is_active_panel_lhs;
         },
-        panel_rhs: function() {
-            return this.$store.state.is_active_panel_rhs;
+        is_active_panel_rhs: function() {
+            return !this.$store.state.is_active_panel_lhs;
         },
         status_str: function() {
             return this.$store.state.status_string;
@@ -66,32 +72,18 @@ export default {
     },
 
     methods: {
-        get_selected_file_names: function() {
-            let files;
-            if(this.$store.state.is_active_panel_lhs) {
-                files = this.$store.getters.lhs_selected_file_names;
-            } else {
-                files = this.$store.getters.rhs_selected_file_names;
-            }
-            return files;
+        activate_panel: function(is_lhs) {
+            this.$store.commit('activate_panel', {is_lhs: is_lhs});
         },
-        
+
         create_folder: function() {
-            let path;
-            if(this.$store.state.is_active_panel_lhs) {
-                path = this.$store.state.panel_lhs.path;
-            } else {
-                path = this.$store.state.panel_rhs.path;
-            }
+            let path = this.$store.getters.active_panel.path;
             if(path != '/') path += '/';
             path += this.new_folder_name;
             let p = this.$store.dispatch('create_folder', { path: path });
             p.then(() => {
-                const is_lhs = this.$store.state.is_active_panel_lhs;
-                const path =
-                    is_lhs ?
-                    this.$store.state.panel_lhs.path :
-                    this.$store.state.panel_rhs.path;
+                const is_lhs = this.is_active_panel_lhs;
+                const path = this.$store.getters.active_panel.path;
                 this.$store.dispatch('read_folder', {
                     is_lhs: is_lhs,
                     path: path
@@ -100,14 +92,11 @@ export default {
         },
         
         remove_files: function() {
-            const files = this.get_selected_file_names();
+            const files = this.$store.getters.selected_file_names;
             let p = this.$store.dispatch('remove_files', { files: files });
             p.then(() => {
-                const is_lhs = this.$store.state.is_active_panel_lhs;
-                const path =
-                    is_lhs ?
-                    this.$store.state.panel_lhs.path :
-                    this.$store.state.panel_rhs.path;
+                const is_lhs = this.is_active_panel_lhs;
+                const path = this.$store.getters.active_panel.path;
                 this.$store.dispatch('read_folder', {
                     is_lhs: is_lhs,
                     path: path
@@ -116,17 +105,14 @@ export default {
         },
 
         copy_files: function() {
-            const files = this.get_selected_file_names();
-            const dst_path =
-                this.$store.state.is_active_panel_lhs ?
-                this.$store.state.panel_rhs.path :
-                this.$store.state.panel_lhs.path;
+            const files = this.$store.getters.selected_file_names;
+            const dst_path = this.$store.getters.not_active_panel.path;
             let p = this.$store.dispatch('copy_files', {
                 files: files,
                 dst_path: dst_path
             });
             p.then(() => {
-                const is_lhs = !this.$store.state.is_active_panel_lhs;
+                const is_lhs = this.is_active_panel_rhs;
                 this.$store.dispatch('read_folder', {
                     is_lhs: is_lhs,
                     path: dst_path
@@ -135,11 +121,8 @@ export default {
         },
 
         move_files: function() {
-            const files = this.get_selected_file_names();
-            const dst_path =
-                this.$store.state.is_active_panel_lhs ?
-                this.$store.state.panel_rhs.path :
-                this.$store.state.panel_lhs.path;
+            const files = this.$store.getters.selected_file_names;
+            const dst_path = this.$store.getters.not_active_panel.path;
             let p = this.$store.dispatch('move_files', {
                 files: files,
                 dst_path: dst_path
@@ -161,10 +144,7 @@ export default {
         },
 
         upload_file_action: function() {
-            const path =
-                this.$store.state.is_active_panel_lhs ?
-                this.$store.state.panel_lhs.path :
-                this.$store.state.panel_rhs.path;
+            const path = this.$store.getters.active_panel.path;
             this.$store.dispatch('upload_file', {
                 file: this.upload_file,
                 path: path,
@@ -173,10 +153,6 @@ export default {
                 console.log('upload_file_action SUCCESS!!');
                 this.upload_percentage = 0;
                 const is_lhs = this.$store.state.is_active_panel_lhs;
-                const path =
-                    is_lhs ?
-                    this.$store.state.panel_lhs.path :
-                    this.$store.state.panel_rhs.path;
                 this.$store.dispatch('read_folder', {
                     is_lhs: is_lhs,
                     path: path
@@ -194,7 +170,6 @@ export default {
         },
     },
 };
-
 </script> 
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -206,9 +181,13 @@ export default {
 .panel {
     display: table-cell;
     border: 1px solid black;
-    width: 50%
+    width: 50%;
+    text-align: left;
 }
 .status-string {
     background-color: gray;
+}
+.active-panel {
+    background-color: #DEB887;
 }
 </style>

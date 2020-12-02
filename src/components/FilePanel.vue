@@ -1,16 +1,15 @@
 <template>
-<div
-    v-on:click="activate"
-    v-bind:class="{ 'active-file-panel': is_active }"
->
-    <button v-on:click="select_all_files(true)">Select all</button>
-    <button v-on:click="select_all_files(false)">Unselect all</button>
+<div>
+    <div style="text-align: center">
+        <button v-on:click="select_all_files(true)">Select all</button>
+        <button v-on:click="select_all_files(false)">Unselect all</button>
+    </div>
     <p>{{ path }}</p>
     <FileItem
         v-for="file in files"
         v-bind:file="file"
         v-on:change_selected="on_change_selected"
-        v-on:folder-clicked="open_folder"
+        v-on:folder-clicked="navigate_to_folder"
         v-bind:key="file.name"
     ></FileItem>
 </div>
@@ -63,11 +62,7 @@ export default {
         }
     },
     methods: {
-        activate: function() {
-            this.$store.commit('activate_panel', {is_lhs: this.is_lhs});
-        },
-       
-        open_folder: function(path) {
+        navigate_to_folder: function(path) {
             let lhs_path = this.$route.query.lhs;
             let rhs_path = this.$route.query.rhs;
             if (lhs_path === undefined) lhs_path = '/';
@@ -126,7 +121,5 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.active-file-panel {
-    background-color: Teal;
-}
+
 </style>
