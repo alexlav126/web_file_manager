@@ -105,6 +105,19 @@ def process_move_files(files, dst_path):
             break
     return result
 
+def process_rename_file(src_file, dst_file):
+    print('rename file from: ' + str(src_file) + ' to: ' + str(dst_file))
+    result = {}
+    result['status'] = 'ok'
+    try:
+        src = os.path.join(ROOT_DIR, src_file[1:])
+        dst = os.path.join(ROOT_DIR, dst_file[1:])
+        shutil.move(src, dst)
+    except Exception as err:
+        print(err)
+        result['status'] = 'error'
+    return result
+
 def process_upload_file(file_storage, path):
     print('name1: ', file_storage.filename)
     name = secure_filename(file_storage.filename)
@@ -153,6 +166,8 @@ def files():
                 return jsonify(process_copy_files(req['files'], req['dst_path']))
             elif(action == 'move_files'):
                 return jsonify(process_move_files(req['files'], req['dst_path']))
+            elif(action == 'rename_file'):
+                return jsonify(process_rename_file(req['src_file'], req['dst_file']))
             else:
                 status = 'error'
                 response = { 'action': action, 'status': status }

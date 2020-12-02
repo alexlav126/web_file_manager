@@ -7,6 +7,7 @@ import {
     get_request_data_remove_files,
     get_request_data_copy_files,
     get_request_data_move_files,
+    get_request_data_rename_file,
     send_post_request
 } from './server_requests.js'
 
@@ -205,6 +206,12 @@ const my_store = new Vuex.Store({
 
         move_files(context, {files, dst_path}) {
             let request_data = get_request_data_move_files(files, dst_path);
+            let response = send_post_request(get_url_files(), request_data);
+            return response;
+        },
+
+        rename_file(context, {src_file, dst_file}) {
+            let request_data = get_request_data_rename_file(src_file, dst_file);
             let response = send_post_request(get_url_files(), request_data);
             return response;
         },

@@ -41,7 +41,19 @@
         
         <input type="text" v-model="new_folder_name">
         <button v-on:click="create_folder">New folder</button>
+        
         <br><br>
+
+        <input type="text" v-model="rename_file_name">
+        <button
+            v-on:click="rename_file"
+            v-bind:disabled="!is_selected_one_file"
+        >
+            Rename
+        </button>
+        
+        <br><br>
+        
         <label>
             File
             <input type="file" id="file" ref="file" v-on:change="upload_file_changed"/>
@@ -70,6 +82,25 @@ export default {
         FilePanel
     },
 
+    data: function() {
+        return {
+            new_folder_name: 'new folder',
+            rename_file_name: '',
+            upload_file: '',
+            upload_percentage: 0,
+        }
+    },
+
+    watch: {
+        selected_one_file_name: function(newValue) {
+            let full_file_name = newValue;
+            let ind = full_file_name.lastIndexOf('/');
+            if(ind > 0) {
+                this.rename_file_name = full_file_name.substring(ind + 1);
+            }
+        },
+    },
+    
     computed: {
         is_active_panel_lhs: function() {
             return this.$store.state.is_active_panel_lhs;
@@ -83,27 +114,30 @@ export default {
             return this.$store.getters.selected_file_names.length == 0;
         },
 
+        is_selected_one_file: function() {
+            return this.$store.getters.selected_file_names.length == 1;
+        },
+
+        selected_one_file_name: function() {
+            const names = this.$store.getters.selected_file_names;
+            if(names.length == 1) {
+                return names[0];
+            } else {
+                return '';
+            }
+        },
+        
         is_no_selected_upload_file: function() {
             return this.upload_file === '';
         },
-        
+
         status_str: function() {
             return this.$store.state.status_string;
         },
     },
-    
-    data: function() {
-        return {
-            new_folder_name: 'new folder',
-            upload_file: '',
-            upload_percentage: 0,
-        }
-    },
-    
-    mounted: function() {
-        //
-    },
 
+    
+    
     methods: {
         activate_panel: function(is_lhs) {
             this.$store.commit('activate_panel', {is_lhs: is_lhs});
@@ -196,6 +230,28 @@ export default {
             });
             
             
+        },
+
+        rename_file: function() {
+            const path = this.$store.getters.active_panel.path;
+            let src_file = this.selected_one_file_name;
+            let dst_file = this.rename_file_name;
+            if(path === '/') {
+                dst_file = path + dst_file;
+            } else {
+                dst_file = path + '/' + dst_file;
+            }
+            
+            let p = this.$store.dispatch('rename_file', {
+                src_file: src_file,
+                dst_file: dst_file
+            });
+            p.then(() => {
+                this.$store.dispatch('read_folder', {
+                    is_lhs: this.$store.state.is_active_panel_lhs,
+                    path: path
+                });
+            })
         },
         
         button_click: function() {

@@ -35,6 +35,15 @@ function get_request_data_move_files(files, dst_path) {
     }
 }
 
+function get_request_data_rename_file(src_file, dst_file) {
+    return {
+        'action': 'rename_file',
+        'src_file': src_file,
+        'dst_file': dst_file
+    }
+}
+
+
 
 async function send_post_request(url, data) {
     console.log('send_post_request() url:' + url + ' data:', data);
@@ -61,5 +70,6 @@ export {
     get_request_data_remove_files,
     get_request_data_copy_files,
     get_request_data_move_files,
+    get_request_data_rename_file,
     send_post_request
 }
