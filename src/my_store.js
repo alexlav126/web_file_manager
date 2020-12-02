@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
-import { url_files } from './url.js'
 import {
     get_request_data_read_folder,
     get_request_data_create_folder,
@@ -14,6 +13,16 @@ import {
 
 Vue.use(Vuex)
 
+function get_url_files() {
+    const url_files = '/files';
+    let host;
+    if(process.env.NODE_ENV === 'production') {
+        host = '';
+    } else {
+        host = 'http://localhost:5000';
+    }
+    return host + url_files;
+}
 
 function create_file_obj(name, is_folder, href) {
     return {
@@ -141,7 +150,7 @@ const my_store = new Vuex.Store({
                 new_file_array.push(item);
             }
 
-            const url = url_files;
+            const url = get_url_files();
             
             for(let file in response.files) {
                 const name = response.files[file];
@@ -157,7 +166,7 @@ const my_store = new Vuex.Store({
         read_folder(context, {is_lhs, path}) {
             if (path === undefined) path = '/';
             let request_data = get_request_data_read_folder(path);
-            let response = send_post_request(request_data);
+            let response = send_post_request(get_url_files(), request_data);
             response.then((resp_value) => {
                 context.commit('update_panel', {
                     is_lhs: is_lhs,
@@ -169,7 +178,7 @@ const my_store = new Vuex.Store({
         create_folder(context, {path}) {
             if(path === undefined) return;
             let request_data = get_request_data_create_folder(path);
-            let response = send_post_request(request_data);
+            let response = send_post_request(get_url_files(), request_data);
             return response.then((resp_value) => {
                 if(resp_value.status != 'ok') {
                     throw 'error: can\'t create folder: ' + path;
@@ -184,19 +193,19 @@ const my_store = new Vuex.Store({
 
         remove_files(context, {files}) {
             let request_data = get_request_data_remove_files(files);
-            let response = send_post_request(request_data);
+            let response = send_post_request(get_url_files(), request_data);
             return response;
         },
 
         copy_files(context, {files, dst_path}) {
             let request_data = get_request_data_copy_files(files, dst_path);
-            let response = send_post_request(request_data);
+            let response = send_post_request(get_url_files(), request_data);
             return response;
         },
 
         move_files(context, {files, dst_path}) {
             let request_data = get_request_data_move_files(files, dst_path);
-            let response = send_post_request(request_data);
+            let response = send_post_request(get_url_files(), request_data);
             return response;
         },
 
@@ -210,7 +219,7 @@ const my_store = new Vuex.Store({
                     this_arg.upload_percentage = Math.round((e.loaded * 100) / e.total);
                 }.bind(this_arg)
             };
-            return axios.post(url_files, formData, config);
+            return axios.post(get_url_files(), formData, config);
         },
     },
 })

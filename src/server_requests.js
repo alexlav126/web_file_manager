@@ -1,5 +1,3 @@
-import { url_files } from './url.js'
-
 function get_request_data_read_folder(path) {
     return {
         'action': 'read_folder',
@@ -38,10 +36,8 @@ function get_request_data_move_files(files, dst_path) {
 }
 
 
-async function send_post_request(data = {}) {
-    // const url = window.location.origin + window.location.pathname;
-    const url = url_files;
-    console.log('send_post_request() data:', data);
+async function send_post_request(url, data) {
+    console.log('send_post_request() url:' + url + ' data:', data);
     try {
         const response = await fetch(url, {
             method: 'POST',
