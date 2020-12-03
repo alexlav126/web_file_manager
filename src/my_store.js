@@ -45,7 +45,7 @@ const my_store = new Vuex.Store({
         auth: {
             status: '',
             token: localStorage.getItem('token') || '',
-            user : {}
+            user : ''
         },
         
         is_active_panel_lhs: true,
@@ -76,6 +76,7 @@ const my_store = new Vuex.Store({
         is_logged_in: state => !!state.auth.token,
         auth_status: state => state.auth.status,
         auth_token: state => state.auth.token,
+        auth_user: state => state.auth.user,
         
         active_panel: state => {
             if(state.is_active_panel_lhs) {
@@ -115,7 +116,7 @@ const my_store = new Vuex.Store({
             state.auth.status = 'loading'
         },
         
-        auth_success(state, token, user){
+        auth_success(state, {token, user}){
             state.auth.status = 'success'
             state.auth.token = token
             state.auth.user = user
@@ -208,7 +209,7 @@ const my_store = new Vuex.Store({
                     const user = resp.data.user
                     localStorage.setItem('token', token)
                     axios.defaults.headers.common['Authorization'] = token
-                    commit('auth_success', token, user)
+                    commit('auth_success', {token, user});
                     resolve(resp)
                 })
                 .catch(err => {

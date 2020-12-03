@@ -2,7 +2,7 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">Home</router-link>
-      <span v-if="is_logged_in"> | <a @click="logout">Logout</a></span>
+      <span v-if="is_logged_in"> | <a @click="logout">Logout {{ auth_user }}</a></span>
     </div>
     <router-view/>
   </div>
@@ -11,7 +11,8 @@
 <script>
   export default {
     computed : {
-      is_logged_in : function(){ return this.$store.getters.is_logged_in }
+      is_logged_in : function(){ return this.$store.getters.is_logged_in },
+      auth_user : function(){ return this.$store.getters.auth_user }
     },
     methods: {
       logout: function () {
