@@ -10,7 +10,7 @@
         v-bind:class="{ 'file-item-selected': file.selected }"
         v-on:click="click"
     >
-        <a v-if="!file.is_folder" v-bind:href="file.href" target="_blank">
+        <a v-if="!file.is_folder" v-bind:href="file_href_token" target="_blank">
             [{{ file_type }}]
             {{ file.name }}
         </a>
@@ -52,6 +52,10 @@ export default {
     computed: {
         file_type: function() {
             return this.file.is_folder ? 'folder' : 'file';
+        },
+
+        file_href_token: function() {
+            return this.file.href + '&token=' + this.$store.getters.auth_token;
         }
     },
     methods: {

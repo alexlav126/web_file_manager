@@ -8,22 +8,28 @@ import {
     get_request_data_copy_files,
     get_request_data_move_files,
     get_request_data_rename_file,
-    send_post_request
+    //send_post_request
 } from './server_requests.js'
 
 
 Vue.use(Vuex)
 
-function get_url_files() {
-    const url_files = '/files';
-    let host;
+function get_url_host() {
     if(process.env.NODE_ENV === 'production') {
-        host = '';
+        return '';
     } else {
-        host = 'http://localhost:5000';
+        return 'http://localhost:5000';
     }
-    return host + url_files;
 }
+
+function get_url_files() {
+    return get_url_host() + '/files';
+}
+
+function get_url_login() {
+    return get_url_host() + '/login';
+}
+
 
 function create_file_obj(name, is_folder, href) {
     return {
@@ -36,6 +42,12 @@ function create_file_obj(name, is_folder, href) {
 
 const my_store = new Vuex.Store({
     state: {
+        auth: {
+            status: '',
+            token: localStorage.getItem('token') || '',
+            user : {}
+        },
+        
         is_active_panel_lhs: true,
         status_string: 'ready',
         panel_lhs: {
@@ -61,6 +73,10 @@ const my_store = new Vuex.Store({
     },
 
     getters: {
+        is_logged_in: state => !!state.auth.token,
+        auth_status: state => state.auth.status,
+        auth_token: state => state.auth.token,
+        
         active_panel: state => {
             if(state.is_active_panel_lhs) {
                 return state.panel_lhs;
@@ -95,6 +111,25 @@ const my_store = new Vuex.Store({
     },
     
     mutations: {
+        auth_request(state){
+            state.auth.status = 'loading'
+        },
+        
+        auth_success(state, token, user){
+            state.auth.status = 'success'
+            state.auth.token = token
+            state.auth.user = user
+        },
+        
+        auth_error(state){
+            state.auth.status = 'error'
+        },
+        
+        logout(state){
+            state.auth.status = ''
+            state.auth.token = ''
+        },
+        
         activate_panel(state, {is_lhs}) {
             state.is_active_panel_lhs = is_lhs === true;
         },
@@ -121,7 +156,7 @@ const my_store = new Vuex.Store({
         
         update_panel(state, {is_lhs, response}) {
             const panel = is_lhs ? state.panel_lhs : state.panel_rhs;
-            
+
             if(response.status != 'ok') return;
             let path = response.path;
 
@@ -164,56 +199,95 @@ const my_store = new Vuex.Store({
     },
 
     actions: {
+        login({commit}, user) {
+            return new Promise((resolve, reject) => {
+                commit('auth_request')
+                axios({url: get_url_login(), data: user, method: 'POST' })
+                .then(resp => {
+                    const token = resp.data.token
+                    const user = resp.data.user
+                    localStorage.setItem('token', token)
+                    axios.defaults.headers.common['Authorization'] = token
+                    commit('auth_success', token, user)
+                    resolve(resp)
+                })
+                .catch(err => {
+                    commit('auth_error')
+                    localStorage.removeItem('token')
+                    reject(err)
+                })
+            })
+        },
+
+        logout({commit}){
+            return new Promise((resolve/*, reject*/) => {
+                commit('logout')
+                localStorage.removeItem('token')
+                delete axios.defaults.headers.common['Authorization']
+                resolve()
+            })
+        },
+        
         read_folder(context, {is_lhs, path}) {
             if (path === undefined) path = '/';
-            let request_data = get_request_data_read_folder(path);
-            let response = send_post_request(get_url_files(), request_data);
-            response.then((resp_value) => {
-                context.commit('update_panel', {
-                    is_lhs: is_lhs,
-                    response: resp_value
-                });
-            });
+            const data = get_request_data_read_folder(path);
+            return new Promise((resolve, reject) => {
+                axios({url: get_url_files(), data: data, method: 'POST' })
+                .then(resp => {
+                    context.commit('update_panel', {
+                        is_lhs: is_lhs,
+                        response: resp.data
+                    });
+                    resolve(resp);
+                })
+                .catch(err => {
+                    console.error(err);
+                    context.commit('update_status_string', err);
+                    reject(err);
+                })
+            })
         },
 
         create_folder(context, {path}) {
             if(path === undefined) return;
-            let request_data = get_request_data_create_folder(path);
-            let response = send_post_request(get_url_files(), request_data);
-            return response.then((resp_value) => {
-                if(resp_value.status != 'ok') {
-                    throw 'error: can\'t create folder: ' + path;
-                } else {
-                    const s = 'created folder: ' + path;
-                    context.commit('update_status_string', s);
-                }
-            }).catch((err) => {
-                context.commit('update_status_string', err);
-            });
+            const data = get_request_data_create_folder(path);
+            return new Promise((resolve, reject) => {
+                axios({url: get_url_files(), data: data, method: 'POST' })
+                .then(resp => {
+                    if(resp.data.status != 'ok') {
+                        reject('error: can\'t create folder: ' + path);
+                    } else {
+                        const s = 'created folder: ' + path;
+                        context.commit('update_status_string', s);
+                    }
+                    resolve(resp);
+                })
+                .catch(err => {
+                    console.error(err);
+                    context.commit('update_status_string', err);
+                    reject(err);
+                })
+            })
         },
 
         remove_files(context, {files}) {
-            let request_data = get_request_data_remove_files(files);
-            let response = send_post_request(get_url_files(), request_data);
-            return response;
+            const data = get_request_data_remove_files(files);
+            return axios({url: get_url_files(), data: data, method: 'POST' });
         },
 
         copy_files(context, {files, dst_path}) {
-            let request_data = get_request_data_copy_files(files, dst_path);
-            let response = send_post_request(get_url_files(), request_data);
-            return response;
+            const data = get_request_data_copy_files(files, dst_path);
+            return axios({url: get_url_files(), data: data, method: 'POST' });
         },
 
         move_files(context, {files, dst_path}) {
-            let request_data = get_request_data_move_files(files, dst_path);
-            let response = send_post_request(get_url_files(), request_data);
-            return response;
+            const data = get_request_data_move_files(files, dst_path);
+            return axios({url: get_url_files(), data: data, method: 'POST' });
         },
 
         rename_file(context, {src_file, dst_file}) {
-            let request_data = get_request_data_rename_file(src_file, dst_file);
-            let response = send_post_request(get_url_files(), request_data);
-            return response;
+            const data = get_request_data_rename_file(src_file, dst_file);
+            return axios({url: get_url_files(), data: data, method: 'POST' });
         },
 
         upload_file(context, {file, path, this_arg}) {

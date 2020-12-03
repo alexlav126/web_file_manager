@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory, abort
+from flask import Flask, render_template, request, make_response, jsonify, send_from_directory, abort
 from flask_cors import CORS
 from werkzeug import secure_filename
 import os
 import shutil
+import jwt 
+from datetime import datetime, timedelta
+from functools import wraps
 
 # different delimiters in jinja2 + flask
 class CustomFlask(Flask):
@@ -19,6 +22,17 @@ class CustomFlask(Flask):
 #app = Flask(__name__)
 app = CustomFlask(__name__)
 app.config['DEBUG'] = True
+
+# configuration 
+# NEVER HARDCODE YOUR CONFIGURATION IN YOUR CODE 
+# INSTEAD CREATE A .env FILE AND STORE IN IT 
+app.config['SECRET_KEY'] = 'your secret key'
+
+my_users = [
+    { 'login': 'user1', 'password': 'pas1' },
+    { 'login': 'user2', 'password': 'pas2' },
+    { 'login': 'user3', 'password': 'pas3' },
+]
 
 CORS(app, resources={r'/*': {'origins': '*'}})
 
@@ -129,6 +143,47 @@ def process_upload_file(file_storage, path):
     file_storage.save(file_name)
     return result
 
+def is_user_valid(user_name):
+    for u in my_users:
+        if u['login'] == user_name:
+            return True
+    return False
+
+def get_user_by_name_password(name, password):
+    for u in my_users:
+        if u['login'] == name and u['password'] == password:
+            return u
+    return None
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if request.method == 'GET':
+            token = request.args.get('token')
+        else:
+            token_header = 'Authorization'
+            print('token_required headers:', request.headers)
+            # jwt is passed in the request header
+            if token_header in request.headers:
+                token = request.headers[token_header]
+        if not token:
+            print('return 401 if token is not passed')
+            return jsonify({'message' : 'Token is missing !!'}), 401
+        try:
+            # decoding the payload to fetch the stored details
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            current_user = data['login']
+            if not is_user_valid(current_user):
+                print('current_user: ', current_user, ' not valid')
+                return jsonify({ 'message' : 'Token is invalid !!'}), 401
+        except Exception as err:
+            print(err)
+            return jsonify({ 'message' : 'Token is invalid !!'}), 401
+        # returns the current logged in users contex to the routes
+        return f(current_user, *args, **kwargs)
+    return decorated
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -149,9 +204,49 @@ def get_js(filename):
     except FileNotFoundError:
         abort(404)
 
+@app.route("/login", methods =['POST'])
+def login():
+    auth = request.get_json()
+    print(auth)
+    
+    if not auth or not auth.get('name') or not auth.get('password'):
+        # returns 401 if any email or / and password is missing
+        return make_response(
+            'Could not verify',
+            401,
+            {'WWW-Authenticate' : 'Basic realm ="Login required !"'}
+        )
+
+    log = auth.get('name')
+    pas = auth.get('password')
+    user = get_user_by_name_password(log, pas)
+    if user:
+        # generates the JWT Token
+        token = jwt.encode(
+            {
+                'login': user['login'],
+                'exp' : datetime.utcnow() + timedelta(minutes = 30)
+            },
+            app.config['SECRET_KEY']
+        )
+        return make_response(
+            jsonify({'token': token.decode('UTF-8'), 'user': log}),
+            201
+        )
+
+    # returns 403 if password is wrong 
+    return make_response(
+        'Could not verify',
+        403,
+        {'WWW-Authenticate' : 'Basic realm ="Wrong login / password!"'}
+    )
+
+
 
 @app.route('/files', methods=['GET', 'POST'])
-def files():
+@token_required
+def files(current_user):
+    print('files current_user: ', current_user)
     if request.method == 'POST':
         if ('application/json' in request.content_type):
             req = request.get_json()
